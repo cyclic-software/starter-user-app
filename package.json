@@ -2,16 +2,20 @@
   "name": "starter-rest-api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "dev": "env-cmd nodemon index.js",
     "lint": "./node_modules/.bin/eslint --fix .",
-    "prepare": "husky install",
     "repl": "env-cmd node"
   },
   "keywords": [],
   "author": "Kam Lasater <kam.lasater@cyclic.sh>",
   "license": "ISC",
+  "repository": "https://github.com/seekayel/starter-user-app",
+  "engines": {
+    "node": "^14.0.0",
+    "npm": "^6.0.0"
+  },
   "devDependencies": {
     "env-cmd": "^10.1.0",
     "eslint": "^8.16.0",
