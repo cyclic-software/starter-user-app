@@ -1,9 +1,10 @@
 const express = require('express')
 const app = express()
 const helmet = require('helmet')
-const validate = require('express-jsonschema').validate
-
 const db = require('cyclic-dynamodb')
+const auth = require('./auth.js')
+
+// const validate = require('express-jsonschema').validate
 
 app.use(helmet())
 app.use(express.json())
@@ -12,43 +13,84 @@ app.use(express.urlencoded({ extended: true }))
 // #############################################################################
 // This configures static hosting for files in /public that have the extensions
 // listed in the array.
-// var options = {
-//   dotfiles: 'ignore',
-//   etag: false,
-//   extensions: ['htm', 'html','css','js','ico','jpg','jpeg','png','svg'],
-//   index: ['index.html'],
-//   maxAge: '1m',
-//   redirect: false
-// }
-// app.use(express.static('public', options))
-// #############################################################################
-
-const petSchema = {
-  id: '/Pet',
-  type: 'object',
-  properties: {
-    gender: {
-      type: 'string',
-      required: true,
-      enum: ['male', 'female']
-    },
-    breed: {
-      type: 'string',
-      required: true
-    }
-  }
+var options = {
+  dotfiles: 'ignore',
+  etag: false,
+  extensions: ['htm', 'html','css','js','ico','jpg','jpeg','png','svg'],
+  index: ['index.html'],
+  maxAge: '1m',
+  redirect: false
 }
+app.use(express.static('public', options))
 
-app.post('/:col/:key', validate({ body: petSchema }), async (req, res) => {
+const users = db.collection('users')
+
+app.post('/signup', async (req, res) => {
   console.log(req.body)
 
-  const col = req.params.col
-  const key = req.params.key
-  console.log(`from collection: ${col} delete key: ${key} with params ${JSON.stringify(req.params)}`)
-  const item = await db.collection(col).set(key, req.body)
-  console.log(JSON.stringify(item, null, 2))
-  res.json(item).end()
+  const email = req.body.email
+  const psw = req.body.psw
+  const psw_repeat = req.body.psw_repeat
+
+  const existingUser = await users.get(email)
+  if (existingUser) {
+    res.json({"error":"email already registered"}).end()
+    return
+  }
+  if (psw !== psw_repeat) {
+    res.json({"error":"passwords don't match"}).end()
+    return
+  }
+
+  const {salt,hashed} = auth.securePassword(psw)
+
+  const uid = 'uid_' + Math.random().toString().slice(2)
+  const uProps = {
+    uid,
+    email,
+    status: 'new',
+    salt,
+    hashedPassword: hashed
+  }
+
+  const user = await users.set(email, uProps)
+
+  // console.log(JSON.stringify(user, null, 2))
+
+  delete user.props.salt
+  delete user.props.hashedPassword
+
+  // console.log(JSON.stringify(user.props, null, 2))
+  res.json(user.props).end()
 })
+
+
+// const petSchema = {
+//   id: '/Pet',
+//   type: 'object',
+//   properties: {
+//     gender: {
+//       type: 'string',
+//       required: true,
+//       enum: ['male', 'female']
+//     },
+//     breed: {
+//       type: 'string',
+//       required: true
+//     }
+//   }
+// }
+
+// app.post('/:col/:key', validate({ body: petSchema }), async (req, res) => {
+//   console.log(req.body)
+
+//   const col = req.params.col
+//   const key = req.params.key
+//   console.log(`from collection: ${col} delete key: ${key} with params ${JSON.stringify(req.params)}`)
+//   const item = await db.collection(col).set(key, req.body)
+//   console.log(JSON.stringify(item, null, 2))
+//   res.json(item).end()
+// })
 
 app.delete('/:col/:key', async (req, res) => {
   const col = req.params.col
@@ -78,7 +120,7 @@ app.get('/:col', async (req, res) => {
 
 // Catch all handler for all other request.
 app.use('*', (req, res) => {
-  res.json({ msg: 'no route handler found' }).end()
+  res.json({ msg: 'no route handler found', path: req.path, method: req.method}).end()
 })
 
 /*
