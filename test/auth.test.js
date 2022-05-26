@@ -13,7 +13,7 @@ describe('auth.test.js', () => {
     '!@#$!%@^&$*(%^*$%$##!@%^&%%#$@#@:{L<>"A?DF>G<:FADLS{C:AWE">:<'
   ]
   test('securePassword returns values that can be tested', async () => {
-    passwordsToTry.map((pw) => {
+    passwordsToTry.forEach((pw) => {
       const { salt, hashed } = auth.securePassword(pw)
       expect(auth.hashWithSalt(pw, salt)).toEqual(hashed)
       expect(auth.testPassword(pw, salt, hashed)).toEqual(true)
