@@ -3,20 +3,34 @@ const app = express()
 const helmet = require('helmet')
 const db = require('cyclic-dynamodb')
 const auth = require('./auth.js')
+const session = require('express-session')
+const cookieParser = require('cookie-parser')
+const { v4: uuid } = require('uuid')
 
 // const validate = require('express-jsonschema').validate
+const oneDayMs = 24 * 60 * 60 * 1000
 
 app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
+app.use(session({
+  secret: process.env.SESSION_SECRET || uuid(),
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    secure: true,//(process.env.NODE_ENV != 'development'),
+    maxAge: oneDayMs
+  }
+}))
 
 // #############################################################################
 // This configures static hosting for files in /public that have the extensions
 // listed in the array.
-var options = {
+const options = {
   dotfiles: 'ignore',
   etag: false,
-  extensions: ['htm', 'html','css','js','ico','jpg','jpeg','png','svg'],
+  extensions: ['htm', 'html', 'css', 'js', 'ico', 'jpg', 'jpeg', 'png', 'svg'],
   index: ['index.html'],
   maxAge: '1m',
   redirect: false
@@ -24,6 +38,16 @@ var options = {
 app.use(express.static('public', options))
 
 const users = db.collection('users')
+
+app.get('/logout', (req, res) => {
+  req.session.destroy()
+  res.redirect('/')
+})
+
+app.post('/login', async (req, res) => {
+  console.log('login called')
+  res.redirect('/')
+})
 
 app.post('/signup', async (req, res) => {
   console.log(req.body)
@@ -34,15 +58,15 @@ app.post('/signup', async (req, res) => {
 
   const existingUser = await users.get(email)
   if (existingUser) {
-    res.json({"error":"email already registered"}).end()
+    res.json({ error: 'email already registered' }).end()
     return
   }
   if (psw !== psw_repeat) {
-    res.json({"error":"passwords don't match"}).end()
+    res.json({ error: "passwords don't match" }).end()
     return
   }
 
-  const {salt,hashed} = auth.securePassword(psw)
+  const { salt, hashed } = auth.securePassword(psw)
 
   const uid = 'uid_' + Math.random().toString().slice(2)
   const uProps = {
@@ -53,7 +77,7 @@ app.post('/signup', async (req, res) => {
     hashedPassword: hashed
   }
 
-  const user = await users.set(email, uProps)
+  const user = await users.set(email, uProps, { $index: ['uid'] })
 
   // console.log(JSON.stringify(user, null, 2))
 
@@ -61,9 +85,9 @@ app.post('/signup', async (req, res) => {
   delete user.props.hashedPassword
 
   // console.log(JSON.stringify(user.props, null, 2))
+  res.setCookie
   res.json(user.props).end()
 })
-
 
 // const petSchema = {
 //   id: '/Pet',
@@ -120,7 +144,7 @@ app.get('/:col', async (req, res) => {
 
 // Catch all handler for all other request.
 app.use('*', (req, res) => {
-  res.json({ msg: 'no route handler found', path: req.path, method: req.method}).end()
+  res.json({ msg: 'no route handler found', path: req.path, method: req.method }).end()
 })
 
 /*

