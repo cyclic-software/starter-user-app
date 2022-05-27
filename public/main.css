@@ -1,6 +1,6 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background-color: black;
+  background-color: #f1f1f1;
   padding-top: 160px;
 }
 
@@ -60,4 +60,12 @@ a {
 .signin {
   background-color: #f1f1f1;
   text-align: center;
+}
+
+.layout_content {
+  flex-grow: 1;
+  margin: 0 auto;
+  position: relative;
+  width: 430px;
+  overflow: auto;
 }
