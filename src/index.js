@@ -4,25 +4,46 @@ const helmet = require('helmet')
 const db = require('cyclic-dynamodb')
 const auth = require('./auth.js')
 const session = require('express-session')
-const cookieParser = require('cookie-parser')
+const DynamoDBStore = require('dynamodb-store');
+// const cookieParser = require('cookie-parser')
 const { v4: uuid } = require('uuid')
 const path = require('path')
 
 // const validate = require('express-jsonschema').validate
-const oneDayMs = 24 * 60 * 60 * 1000
+const oneHourMs = 60 * 60 * 1000
+const oneDayMs = 24 * oneHourMs
 
 app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use(cookieParser())
+// app.use(cookieParser())
+
+
+const dynamoOpts = {
+  table: {
+    name: process.env.CYCLIC_DB,
+    hashKey: "pk",
+    hashPrefix: "sid_",
+    sortKey: "sk",
+    // "readCapacityUnits": 10,
+    // "writeCapacityUnits": 10
+  },
+  keepExpired: false,
+  touchInterval: oneHourMs,
+  ttl: oneDayMs,
+}
+
+app.set('trust-proxy',1)
 app.use(session({
+  // store: new DynamoDBStore(dynamoOpts),
   secret: process.env.SESSION_SECRET || uuid(),
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   cookie: {
-    secure: true, // (process.env.NODE_ENV != 'development'),
-    maxAge: oneDayMs
-  }
+    secure: 'auto', // (process.env.NODE_ENV != 'development'),
+    maxAge: oneDayMs,
+  },
+  // unset: "destroy"
 }))
 
 // #############################################################################
@@ -47,6 +68,8 @@ app.get('/logout', (req, res) => {
 
 app.get('/login', async (req, res) => {
   if (req.session?.logged_in) {
+    req.session.views = req.session.views + 1 || 1
+    console.log(req.session.views)
     res.json({ msg: 'You are already logged in.' })
   } else {
     res.sendFile(path.resolve('public/login.html'))
@@ -66,7 +89,9 @@ app.post('/login', async (req, res) => {
   } else if (auth.testPassword(psw, user.salt, user.hashedPassword)) {
     req.session.logged_in = true
     req.session.user = user
-    res.sendFile(path.resolve('public/app.html')).end()
+
+    res.redirect('/')
+    // res.sendFile(path.resolve('public/app.html'))
   } else {
     res.json({ error: 'try again' }).end()
   }
@@ -112,8 +137,11 @@ app.post('/signup', async (req, res) => {
 })
 
 app.get('/', async (req, res) => {
+  console.log(req.session)
   if (req.session?.logged_in) {
-    res.sendFile(path.resolve('public/app.html')).end()
+    req.session.views = req.session.views + 1 || 1
+    console.log(req.session.views)
+    res.sendFile(path.resolve('public/app.html'))
   } else {
     res.sendFile(path.resolve('public/login.html'))
   }
