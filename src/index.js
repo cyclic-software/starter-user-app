@@ -28,6 +28,9 @@ const dynamoOpts = {
     // "readCapacityUnits": 10,
     // "writeCapacityUnits": 10
   },
+  dynamoConfig: {
+    endpoint: process.env.AWS_DYNAMO_ENDPOINT,
+  },
   keepExpired: false,
   touchInterval: oneHourMs,
   ttl: oneDayMs,
@@ -35,7 +38,7 @@ const dynamoOpts = {
 
 app.set('trust-proxy',1)
 app.use(session({
-  // store: new DynamoDBStore(dynamoOpts),
+  store: new DynamoDBStore(dynamoOpts),
   secret: process.env.SESSION_SECRET || uuid(),
   resave: false,
   saveUninitialized: false,
