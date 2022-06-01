@@ -4,7 +4,7 @@ const helmet = require('helmet')
 const db = require('cyclic-dynamodb')
 const auth = require('./auth.js')
 const session = require('express-session')
-const DynamoDBStore = require('dynamodb-store');
+const {DynamoDBStore} = require('./dynamodb-store');
 // const cookieParser = require('cookie-parser')
 const { v4: uuid } = require('uuid')
 const path = require('path')
@@ -35,6 +35,8 @@ const dynamoOpts = {
   touchInterval: oneHourMs,
   ttl: oneDayMs,
 }
+
+// console.log(typeof DynamoDBStore)
 
 app.set('trust-proxy',1)
 app.use(session({
