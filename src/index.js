@@ -40,7 +40,7 @@ const dynamoOpts = {
 app.set('trust-proxy',1)
 app.use(session({
   store: new DynamoDBStore(dynamoOpts),
-  secret: process.env.SESSION_SECRET || uuid(),
+  secret: process.env.SESSION_SECRET || 'THIS-IS-NOT-A-SECRET',
   resave: false,
   saveUninitialized: false,
   cookie: {
