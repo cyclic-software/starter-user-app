@@ -25,12 +25,11 @@ const dynamoOpts = {
     hashKey: "pk",
     hashPrefix: "sid_",
     sortKey: "sk",
-    // "readCapacityUnits": 10,
-    // "writeCapacityUnits": 10
+    create: false
   },
-  dynamoConfig: {
-    endpoint: process.env.AWS_DYNAMO_ENDPOINT,
-  },
+  // dynamoConfig: {
+  //   endpoint: process.env.AWS_DYNAMO_ENDPOINT,
+  // },
   keepExpired: false,
   touchInterval: oneHourMs,
   ttl: oneDayMs,
@@ -66,8 +65,8 @@ app.use(express.static('public', options))
 
 const users = db.collection('users')
 
-app.get('/logout', (req, res) => {
-  req.session.destroy()
+app.get('/logout', async (req, res) => {
+  await req.session.destroy()
   res.redirect('/')
 })
 

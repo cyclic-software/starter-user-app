@@ -60,21 +60,34 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
 
     const {
       name = DEFAULT_TABLE_NAME,
+      create = DEFAULT_TABLE_CREATE,
       hashPrefix = DEFAULT_HASH_PREFIX,
       hashKey = DEFAULT_HASH_KEY,
+      sortKey = DEFAULT_SORT_KEY,
       readCapacityUnits = DEFAULT_RCU,
       writeCapacityUnits = DEFAULT_WCU,
     } = table;
 
     this.tableName = name;
+    this.tableCreate = create;
     this.hashPrefix = hashPrefix;
     this.hashKey = hashKey;
+    this.sortKey = sortKey;
     this.readCapacityUnits = Number(readCapacityUnits);
     this.writeCapacityUnits = Number(writeCapacityUnits);
 
     this.touchInterval = touchInterval;
     this.ttl = ttl;
     this.keepExpired = keepExpired;
+
+    this.keySchema = [{ AttributeName: this.hashKey, KeyType: 'HASH' }]
+    this.attributeDefinitions = [{ AttributeName: this.hashKey, AttributeType: 'S' }]
+    if (this.sortKey) {
+      this.keySchema.push({ AttributeName: this.sortKey, KeyType: 'RANGE' })
+      this.attributeDefinitions.push({ AttributeName: this.sortKey, AttributeType: 'S' })
+    }
+
+    console.error(this)
   }
 
   /**
@@ -104,13 +117,8 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
   createTable() {
     const params = {
       TableName: this.tableName,
-      KeySchema: [
-        { AttributeName: this.hashKey, KeyType: 'HASH' },
-        { AttributeName: 'sk', KeyType: 'RANGE' }],
-      AttributeDefinitions: [
-        { AttributeName: this.hashKey, AttributeType: 'S' },
-        { AttributeName: 'sk', AttributeType: 'S' }
-      ],
+      KeySchema: this.keySchema,
+      AttributeDefinitions: this.attributeDefinitions,
       ProvisionedThroughput: {
         ReadCapacityUnits: this.readCapacityUnits,
         WriteCapacityUnits: this.writeCapacityUnits,
@@ -124,6 +132,11 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
    * @param  {Function} callback Callback to be invoked at the end of the execution.
    */
   async createTableIfDontExists(callback) {
+    if (!this.tableCreate) {
+      debug(`Config 'createTable' specifies to not create table`)
+      callback()
+      return
+    }
     try {
       const exists = await this.isTableCreated();
 
@@ -155,7 +168,7 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
         TableName: this.tableName,
         Item: {
           [this.hashKey]: sessionId,
-          'sk': sessionId,
+          [this.sortKey]: sessionId,
           expires: toSecondsEpoch(expires),
           sess: {
             ...sess,
@@ -187,7 +200,7 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
         TableName: this.tableName,
         Key: {
           [this.hashKey]: sessionId,
-          'sk': sessionId
+          [this.sortKey]: sessionId
         },
         ConsistentRead: true,
       };
@@ -221,7 +234,7 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
         TableName: this.tableName,
         Key: {
           [this.hashKey]: sessionId,
-          'sk': sessionId
+          [this.sortKey]: sessionId
         },
       };
       await this.documentClient.delete(params).promise();
@@ -248,7 +261,7 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
           TableName: this.tableName,
           Key: {
             [this.hashKey]: sessionId,
-            'sk': sessionId
+            [this.sortKey]: sessionId
           },
 
           UpdateExpression: 'set expires = :e, sess.#up = :n',

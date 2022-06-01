@@ -2,7 +2,9 @@
 
 // defaults
 const DEFAULT_TABLE_NAME = "sessions";
+const DEFAULT_TABLE_CREATE = true;
 const DEFAULT_HASH_KEY = "sessionId";
+const DEFAULT_SORT_KEY = undefined;
 const DEFAULT_HASH_PREFIX = "sess:";
 const DEFAULT_RCU = 5;
 const DEFAULT_WCU = 5;
@@ -21,6 +23,7 @@ const API_VERSION = "2012-08-10";
 module.exports = {
   DEFAULT_TABLE_NAME,
   DEFAULT_HASH_KEY,
+  DEFAULT_SORT_KEY,
   DEFAULT_RCU,
   DEFAULT_WCU,
   DEFAULT_TTL,
