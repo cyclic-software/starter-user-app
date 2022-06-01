@@ -66,8 +66,10 @@ app.use(express.static('public', options))
 const users = db.collection('users')
 
 app.get('/logout', async (req, res) => {
-  await req.session.destroy()
-  res.redirect('/')
+  req.session.destroy(function(err) {
+    // session saved before callback invoked
+    res.redirect('/')
+  })
 })
 
 app.get('/login', async (req, res) => {
@@ -94,7 +96,10 @@ app.post('/login', async (req, res) => {
     req.session.logged_in = true
     req.session.user = user
 
-    res.redirect('/')
+    req.session.save(function(err) {
+      // session saved before callback invoked
+      res.redirect('/')
+    })
     // res.sendFile(path.resolve('public/app.html'))
   } else {
     res.json({ error: 'try again' }).end()
