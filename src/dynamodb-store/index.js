@@ -1,5 +1,5 @@
 
-const {DynamoDBStore} = require('./DynamoDBStore.js')
+const { DynamoDBStore } = require('./DynamoDBStore.js')
 
 module.exports = {
   DynamoDBStore

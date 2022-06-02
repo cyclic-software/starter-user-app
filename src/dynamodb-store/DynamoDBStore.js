@@ -1,5 +1,5 @@
 // @flow
-const { Store } = require('express-session');
+const { Store } = require('express-session')
 const AWS = require('aws-sdk'); // eslint-disable-line
 const {
   DEFAULT_TABLE_NAME,
@@ -11,52 +11,52 @@ const {
   DEFAULT_TTL,
   DEFAULT_TOUCH_INTERVAL,
   DEFAULT_KEEP_EXPIRED_POLICY,
-  API_VERSION,
-} = require('./constants');
-const { toSecondsEpoch, debug, isExpired } = require('./util');
+  API_VERSION
+} = require('./constants')
+const { toSecondsEpoch, debug, isExpired } = require('./util')
 
 /**
  * Express.js session store for DynamoDB.
  */
- class DynamoDBStore extends Store {
+class DynamoDBStore extends Store {
   /**
    * Constructor.
    * @param  {Object} options                Store
    * @param  {Function} callback Optional callback for table creation.
    */
-  constructor(options = {}, callback = DEFAULT_CALLBACK) {
-    super();
-    debug('Initializing store', options);
+  constructor (options = {}, callback = DEFAULT_CALLBACK) {
+    super()
+    debug('Initializing store', options)
     // debug('AWS sdk: ', AWS);
 
-    this.setOptionsAsInstanceAttributes(options);
+    this.setOptionsAsInstanceAttributes(options)
 
-    const dynamoConfig = options.dynamoConfig || {};
+    const dynamoConfig = options.dynamoConfig || {}
 
     // dynamodb client configuration
     this.dynamoService = new AWS.DynamoDB({
       ...dynamoConfig,
-      apiVersion: API_VERSION,
-    });
+      apiVersion: API_VERSION
+    })
     this.documentClient = new AWS.DynamoDB.DocumentClient({
-      service: this.dynamoService,
-    });
+      service: this.dynamoService
+    })
 
     // creates the table if necessary
-    this.createTableIfDontExists(callback);
+    this.createTableIfDontExists(callback)
   }
 
   /**
    * Saves the informed store options as instance attributes.
    * @param {Object} options Store options.
    */
-  setOptionsAsInstanceAttributes(options) {
+  setOptionsAsInstanceAttributes (options) {
     const {
       table = {},
       touchInterval = DEFAULT_TOUCH_INTERVAL,
       ttl,
-      keepExpired = DEFAULT_KEEP_EXPIRED_POLICY,
-    } = options;
+      keepExpired = DEFAULT_KEEP_EXPIRED_POLICY
+    } = options
 
     const {
       name = DEFAULT_TABLE_NAME,
@@ -65,20 +65,20 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
       hashKey = DEFAULT_HASH_KEY,
       sortKey = DEFAULT_SORT_KEY,
       readCapacityUnits = DEFAULT_RCU,
-      writeCapacityUnits = DEFAULT_WCU,
-    } = table;
+      writeCapacityUnits = DEFAULT_WCU
+    } = table
 
-    this.tableName = name;
-    this.tableCreate = create;
-    this.hashPrefix = hashPrefix;
-    this.hashKey = hashKey;
-    this.sortKey = sortKey;
-    this.readCapacityUnits = Number(readCapacityUnits);
-    this.writeCapacityUnits = Number(writeCapacityUnits);
+    this.tableName = name
+    this.tableCreate = create
+    this.hashPrefix = hashPrefix
+    this.hashKey = hashKey
+    this.sortKey = sortKey
+    this.readCapacityUnits = Number(readCapacityUnits)
+    this.writeCapacityUnits = Number(writeCapacityUnits)
 
-    this.touchInterval = touchInterval;
-    this.ttl = ttl;
-    this.keepExpired = keepExpired;
+    this.touchInterval = touchInterval
+    this.ttl = ttl
+    this.keepExpired = keepExpired
 
     this.keySchema = [{ AttributeName: this.hashKey, KeyType: 'HASH' }]
     this.attributeDefinitions = [{ AttributeName: this.hashKey, AttributeType: 'S' }]
@@ -93,64 +93,64 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
   /**
    * Checks if the sessions table already exists.
    */
-  async isTableCreated() {
+  async isTableCreated () {
     try {
       // attempt to get details from a table
-      let table = await this.dynamoService
+      const table = await this.dynamoService
         .describeTable({
-          TableName: this.tableName,
+          TableName: this.tableName
         })
-        .promise();
-      return true;
+        .promise()
+      return true
     } catch (tableNotFoundError) {
       // Table does not exist
       // There is no error code on AWS error that we could match
       // so its safer to assume the error is because the table does not exist than
       // trying to match the message that could change
-      return false;
+      return false
     }
   }
 
   /**
    * Creates the session table.
    */
-  createTable() {
+  createTable () {
     const params = {
       TableName: this.tableName,
       KeySchema: this.keySchema,
       AttributeDefinitions: this.attributeDefinitions,
       ProvisionedThroughput: {
         ReadCapacityUnits: this.readCapacityUnits,
-        WriteCapacityUnits: this.writeCapacityUnits,
-      },
-    };
-    return this.dynamoService.createTable(params).promise();
+        WriteCapacityUnits: this.writeCapacityUnits
+      }
+    }
+    return this.dynamoService.createTable(params).promise()
   }
 
   /**
    * Creates the session table. Does nothing if it already exists.
    * @param  {Function} callback Callback to be invoked at the end of the execution.
    */
-  async createTableIfDontExists(callback) {
+  async createTableIfDontExists (callback) {
     if (!this.tableCreate) {
-      debug(`Config 'createTable' specifies to not create table`)
+      debug('Config \'createTable\' specifies to not create table')
       callback()
       return
     }
     try {
-      const exists = await this.isTableCreated();
+      const exists = await this.isTableCreated()
 
       if (exists) {
-        debug(`Table ${this.tableName} already exists`);
+        debug(`Table ${this.tableName} already exists`)
       } else {
-        debug(`Creating table ${this.tableName}...`);
-        await this.createTable();
+        debug(`Creating table ${this.tableName}...`)
+        await this.createTable()
       }
 
-      callback();
+      callback()
     } catch (createTableError) {
-      debug(`Error creating table ${this.tableName}`, createTableError);
-      callback(createTableError);
+      debug(`Error creating table ${this.tableName}`, createTableError)
+      callback(createTableError)
     }
   }
 
@@ -160,10 +160,10 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
    * @param  {Object}   sess     The session object.
    * @param  {Function} callback Callback to be invoked at the end of the execution.
    */
-  set(sid, sess, callback) {
+  set (sid, sess, callback) {
     try {
-      const sessionId = this.getSessionId(sid);
-      const expires = this.getExpirationDate(sess);
+      const sessionId = this.getSessionId(sid)
+      const expires = this.getExpirationDate(sess)
       const params = {
         TableName: this.tableName,
         Item: {
@@ -172,19 +172,19 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
           expires: toSecondsEpoch(expires),
           sess: {
             ...sess,
-            updated: Date.now(),
-          },
-        },
-      };
-      debug(`Saving session '${sid}'`, sess);
-      this.documentClient.put(params, callback);
+            updated: Date.now()
+          }
+        }
+      }
+      debug(`Saving session '${sid}'`, sess)
+      this.documentClient.put(params, callback)
     } catch (err) {
       debug('Error saving session', {
         sid,
         sess,
-        err,
-      });
-      callback(err);
+        err
+      })
+      callback(err)
     }
   }
 
@@ -193,32 +193,32 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
    * @param  {String}   sid      Session ID.
    * @param  {Function} callback Callback to be invoked at the end of the execution.
    */
-  async get(sid, callback) {
+  async get (sid, callback) {
     try {
-      const sessionId = this.getSessionId(sid);
+      const sessionId = this.getSessionId(sid)
       const params = {
         TableName: this.tableName,
         Key: {
           [this.hashKey]: sessionId,
           [this.sortKey]: sessionId
         },
-        ConsistentRead: true,
-      };
+        ConsistentRead: true
+      }
 
-      const { Item: record } = await this.documentClient.get(params).promise();
+      const { Item: record } = await this.documentClient.get(params).promise()
 
       if (!record) {
-        debug(`Session '${sid}' not found`);
-        callback(null, null);
+        debug(`Session '${sid}' not found`)
+        callback(null, null)
       } else if (isExpired(record.expires)) {
-        this.handleExpiredSession(sid, callback);
+        this.handleExpiredSession(sid, callback)
       } else {
-        debug(`Session '${sid}' found`, record.sess);
-        callback(null, record.sess);
+        debug(`Session '${sid}' found`, record.sess)
+        callback(null, record.sess)
       }
     } catch (err) {
-      debug(`Error getting session '${sid}'`, err);
-      callback(err);
+      debug(`Error getting session '${sid}'`, err)
+      callback(err)
     }
   }
 
@@ -227,22 +227,22 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
    * @param  {String}   sid      Session ID.
    * @param  {Function} callback Callback to be invoked at the end of the execution.
    */
-  async destroy(sid, callback = DEFAULT_CALLBACK) {
+  async destroy (sid, callback = DEFAULT_CALLBACK) {
     try {
-      const sessionId = this.getSessionId(sid);
+      const sessionId = this.getSessionId(sid)
       const params = {
         TableName: this.tableName,
         Key: {
           [this.hashKey]: sessionId,
           [this.sortKey]: sessionId
-        },
-      };
-      await this.documentClient.delete(params).promise();
-      debug(`Destroyed session '${sid}'`);
-      callback(null, null);
+        }
+      }
+      await this.documentClient.delete(params).promise()
+      debug(`Destroyed session '${sid}'`)
+      callback(null, null)
     } catch (err) {
-      debug(`Error destroying session '${sid}'`, err);
-      callback(err);
+      debug(`Error destroying session '${sid}'`, err)
+      callback(err)
     }
   }
 
@@ -252,11 +252,11 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
    * @param  {Object}   sess     The session object.
    * @param  {Function} callback Callback to be invoked at the end of the execution.
    */
-  touch(sid, sess, callback) {
+  touch (sid, sess, callback) {
     try {
       if (!sess.updated || Number(sess.updated) + this.touchInterval <= Date.now()) {
-        const sessionId = this.getSessionId(sid);
-        const expires = this.getExpirationDate(sess);
+        const sessionId = this.getSessionId(sid)
+        const expires = this.getExpirationDate(sess)
         const params = {
           TableName: this.tableName,
           Key: {
@@ -266,23 +266,23 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
 
           UpdateExpression: 'set expires = :e, sess.#up = :n',
           ExpressionAttributeNames: {
-            '#up': 'updated',
+            '#up': 'updated'
           },
           ExpressionAttributeValues: {
             ':e': toSecondsEpoch(expires),
-            ':n': Date.now(),
+            ':n': Date.now()
           },
-          ReturnValues: 'UPDATED_NEW',
-        };
-        debug(`Touching session '${sid}'`);
-        this.documentClient.update(params, callback);
+          ReturnValues: 'UPDATED_NEW'
+        }
+        debug(`Touching session '${sid}'`)
+        this.documentClient.update(params, callback)
       } else {
-        debug(`Skipping touch of session '${sid}'`);
-        callback();
+        debug(`Skipping touch of session '${sid}'`)
+        callback()
       }
     } catch (err) {
-      debug(`Error touching session '${sid}'`, err);
-      callback(err);
+      debug(`Error touching session '${sid}'`, err)
+      callback(err)
     }
   }
 
@@ -291,12 +291,12 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
    * @param  {String} sid Original session id.
    * @param  {Function} callback Callback to be invoked at the end of the execution.
    */
-  async handleExpiredSession(sid, callback) {
-    debug(`Found session '${sid}' but it is expired`);
+  async handleExpiredSession (sid, callback) {
+    debug(`Found session '${sid}' but it is expired`)
     if (this.keepExpired) {
-      callback(null, null);
+      callback(null, null)
     } else {
-      this.destroy(sid, callback);
+      this.destroy(sid, callback)
     }
   }
 
@@ -305,8 +305,8 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
    * @param  {String} sid Original session id.
    * @return {String}     Prefix + original session id.
    */
-  getSessionId(sid) {
-    return `${this.hashPrefix}${sid}`;
+  getSessionId (sid) {
+    return `${this.hashPrefix}${sid}`
   }
 
   /**
@@ -314,19 +314,18 @@ const { toSecondsEpoch, debug, isExpired } = require('./util');
    * @param  {Object} sess The session object.
    * @return {Date}      the session expiration date.
    */
-  getExpirationDate(sess) {
-    let expirationDate = Date.now();
+  getExpirationDate (sess) {
+    let expirationDate = Date.now()
     if (this.ttl !== undefined) {
-      expirationDate += this.ttl;
+      expirationDate += this.ttl
     } else if (sess.cookie && Number.isInteger(sess.cookie.maxAge)) {
-      expirationDate += sess.cookie.maxAge;
+      expirationDate += sess.cookie.maxAge
     } else {
-      expirationDate += DEFAULT_TTL;
+      expirationDate += DEFAULT_TTL
     }
-    return new Date(expirationDate);
+    return new Date(expirationDate)
   }
 }
-
 
 module.exports = {
   DynamoDBStore

@@ -4,9 +4,7 @@ const helmet = require('helmet')
 const db = require('cyclic-dynamodb')
 const auth = require('./auth.js')
 const session = require('express-session')
-const {DynamoDBStore} = require('./dynamodb-store');
-// const cookieParser = require('cookie-parser')
-const { v4: uuid } = require('uuid')
+const { DynamoDBStore } = require('./dynamodb-store')
 const path = require('path')
 
 // const validate = require('express-jsonschema').validate
@@ -18,13 +16,12 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 // app.use(cookieParser())
 
-
 const dynamoOpts = {
   table: {
     name: process.env.CYCLIC_DB,
-    hashKey: "pk",
-    hashPrefix: "sid_",
-    sortKey: "sk",
+    hashKey: 'pk',
+    hashPrefix: 'sid_',
+    sortKey: 'sk',
     create: false
   },
   // dynamoConfig: {
@@ -32,12 +29,12 @@ const dynamoOpts = {
   // },
   keepExpired: false,
   touchInterval: oneHourMs,
-  ttl: oneDayMs,
+  ttl: oneDayMs
 }
 
 // console.log(typeof DynamoDBStore)
 
-app.set('trust-proxy',1)
+app.set('trust-proxy', 1)
 app.use(session({
   store: new DynamoDBStore(dynamoOpts),
   secret: process.env.SESSION_SECRET || 'THIS-IS-NOT-A-SECRET',
@@ -45,8 +42,8 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     secure: 'auto', // (process.env.NODE_ENV != 'development'),
-    maxAge: oneDayMs,
-  },
+    maxAge: oneDayMs
+  }
   // unset: "destroy"
 }))
 
@@ -66,7 +63,7 @@ app.use(express.static('public', options))
 const users = db.collection('users')
 
 app.get('/logout', async (req, res) => {
-  req.session.destroy(function(err) {
+  req.session.destroy(function (err) {
     // session saved before callback invoked
     res.redirect('/')
   })
@@ -96,7 +93,7 @@ app.post('/login', async (req, res) => {
     req.session.logged_in = true
     req.session.user = user
 
-    req.session.save(function(err) {
+    req.session.save(function (err) {
       // session saved before callback invoked
       res.redirect('/')
     })

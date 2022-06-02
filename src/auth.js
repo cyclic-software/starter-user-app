@@ -2,10 +2,6 @@
 const { v4: uuid } = require('uuid')
 const crypto = require('crypto')
 
-function randomString() {
-  return Math.random().toString(36).slice(2)
-}
-
 function securePassword (password) {
   const salt = uuid()
   return { hashed: hashWithSalt(password, salt), salt }
