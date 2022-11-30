@@ -4,7 +4,7 @@ const helmet = require('helmet')
 const db = require('cyclic-dynamodb')
 const auth = require('./auth.js')
 const session = require('express-session')
-const { DynamoDBStore } = require('./dynamodb-store')
+const { DynamoDBStore } = require('@cyclic.sh/session-store')
 const path = require('path')
 
 // const validate = require('express-jsonschema').validate
@@ -19,10 +19,6 @@ app.use(express.urlencoded({ extended: true }))
 const dynamoOpts = {
   table: {
     name: process.env.CYCLIC_DB,
-    hashKey: 'pk',
-    hashPrefix: 'sid_',
-    sortKey: 'sk',
-    create: false
   },
   // dynamoConfig: {
   //   endpoint: process.env.AWS_DYNAMO_ENDPOINT,
