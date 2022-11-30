@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 const helmet = require('helmet')
-const db = require('cyclic-dynamodb')
+const db = require('@cyclic.sh/dynamodb')
 const auth = require('./auth.js')
 const session = require('express-session')
 const { CyclicSessionStore } = require('@cyclic.sh/session-store')
