@@ -29,7 +29,7 @@
     "nodemon": "^2.0.16"
   },
   "dependencies": {
-    "@cyclic.sh/session-store": "0.0.10",
+    "@cyclic.sh/session-store": "0.0.13",
     "aws-sdk": "^2.1146.0",
     "cyclic-dynamodb": "0.0.21",
     "express": "^4.18.1",
